@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Dr. X Marathon Exams</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#f7f5f0;
+  --surface:#ffffff;
+  --border:#e8e4dc;
+  --ink:#1a1714;
+  --ink2:#6b6560;
+  --ink3:#a09b96;
+  --accent:#c0392b;
+  --accent2:#e8d5d3;
+  --green:#2d6a4f;
+  --green2:#d8f3dc;
+  --red:#c0392b;
+  --red2:#fdecea;
+  --gold:#8b6914;
+  --gold2:#fdf3dc;
+  --warn:#d4630a;
+  --warn2:#fef0e6;
+}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'DM Sans',sans-serif;
+  min-height:100vh;
+  font-size:15px;
+  line-height:1.6;
+}
+body::after{
+  content:'';
+  position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:9999;opacity:0.4;
+}
+.site-header{
+  border-bottom:1px solid var(--border);
+  padding:0 40px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  height:64px;
+  background:var(--surface);
+  position:sticky;top:0;z-index:100;
+}
+.logo{
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.25rem;
+  font-weight:600;
+  letter-spacing:0.02em;
+  color:var(--ink);
+}
+.logo span{color:var(--accent);}
+.header-meta{
+  font-family:'DM Mono',monospace;
+  font-size:11px;
+  color:var(--ink3);
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+}
+.timer-wrap{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-family:'DM Mono',monospace;
+  font-size:13px;
+  color:var(--ink2);
+  background:var(--bg);
+  border:1px solid var(--border);
+  border-radius:6px;
+  padding:6px 14px;
+}
+.timer-dot{
+  width:6px;height:6px;
+  border-radius:50%;
+  background:var(--green);
+  animation:blink 1s ease-in-out infinite;
+}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.3;}}
+.timer-wrap.urgent{color:var(--accent);border-color:var(--accent2);}
+.timer-wrap.urgent .timer-dot{background:var(--accent);}
+.container{
+  max-width:740px;
+  margin:0 auto;
+  padding:48px 24px 120px;
+}
+.quiz-meta{
+  margin-bottom:40px;
+  animation:rise 0.5s ease both;
+}
+@keyframes rise{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+.quiz-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(1.8rem,4vw,2.6rem);
+  font-weight:300;
+  line-height:1.2;
+  margin-bottom:8px;
+}
+.quiz-title em{font-style:italic;color:var(--accent);}
+.quiz-subtitle{font-size:13px;color:var(--ink3);letter-spacing:0.04em;}
+.progress-section{margin-bottom:36px;animation:rise 0.5s ease 0.1s both;}
+.progress-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  margin-bottom:10px;
+}
+.progress-label{font-size:12px;color:var(--ink3);letter-spacing:0.06em;text-transform:uppercase;}
+.progress-count{font-family:'DM Mono',monospace;font-size:12px;color:var(--ink2);}
+.progress-track{height:2px;background:var(--border);border-radius:2px;overflow:hidden;}
+.progress-fill{
+  height:100%;
+  background:var(--ink);
+  border-radius:2px;
+  transition:width 0.4s cubic-bezier(.4,0,.2,1);
+}
+.question-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:32px;
+  margin-bottom:16px;
+  transition:border-color 0.2s;
+  animation:rise 0.4s ease both;
+  position:relative;
+}
+.question-card.unanswered-warn{
+  border-color:var(--warn);
+  box-shadow:0 0 0 3px var(--warn2);
+}
+.q-header{display:flex;align-items:flex-start;gap:16px;margin-bottom:20px;}
+.q-num{
+  font-family:'DM Mono',monospace;
+  font-size:11px;
+  color:var(--ink3);
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  white-space:nowrap;
+  padding-top:3px;
+}
+.q-text{
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.2rem;
+  font-weight:400;
+  line-height:1.5;
+  color:var(--ink);
+  flex:1;
+}
+.options{display:flex;flex-direction:column;gap:8px;}
+.option{
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+  padding:13px 16px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  cursor:pointer;
+  transition:all 0.15s;
+  background:var(--bg);
+  position:relative;
+  user-select:none;
+}
+.option:hover{border-color:#ccc;background:#f0ede8;}
+.option.selected{border-color:var(--ink);background:#f0ede8;}
+.option-radio{
+  width:18px;height:18px;
+  border-radius:50%;
+  border:1.5px solid var(--ink3);
+  flex-shrink:0;
+  margin-top:1px;
+  display:flex;align-items:center;justify-content:center;
+  transition:all 0.15s;
+}
+.option.selected .option-radio{border-color:var(--ink);background:var(--ink);}
+.option.selected .option-radio::after{
+  content:'';
+  width:6px;height:6px;
+  background:#fff;
+  border-radius:50%;
+}
+.option-label{font-size:14px;color:var(--ink);line-height:1.5;}
+.option-key{font-family:'DM Mono',monospace;font-size:11px;color:var(--ink3);margin-right:2px;}
+.warn-badge{display:none;font-size:11px;color:var(--warn);margin-top:10px;letter-spacing:0.03em;}
+.warn-badge.show{display:block;}
+.submit-area{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-top:32px;
+  padding-top:28px;
+  border-top:1px solid var(--border);
+  flex-wrap:wrap;
+  gap:16px;
+}
+.answered-status{font-size:13px;color:var(--ink3);}
+.answered-status strong{color:var(--ink);}
+.btn-submit{
+  background:var(--ink);
+  color:#fff;
+  border:none;
+  padding:14px 36px;
+  border-radius:8px;
+  font-family:'DM Sans',sans-serif;
+  font-size:14px;
+  font-weight:500;
+  cursor:pointer;
+  letter-spacing:0.02em;
+  transition:all 0.2s;
+}
+.btn-submit:hover{background:#2d2a27;transform:translateY(-1px);}
+.btn-submit:active{transform:translateY(0);}
+.results-page{display:none;animation:rise 0.5s ease both;}
+.score-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:40px;
+  margin-bottom:32px;
+  display:grid;
+  grid-template-columns:auto 1fr;
+  gap:32px;
+  align-items:center;
+}
+.score-ring-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;}
+.score-ring{
+  width:110px;height:110px;
+  border-radius:50%;
+  background:conic-gradient(var(--ink) 0% var(--pct), var(--border) var(--pct));
+  display:flex;align-items:center;justify-content:center;
+  position:relative;
+}
+.score-ring::before{
+  content:'';
+  width:82px;height:82px;
+  background:var(--surface);
+  border-radius:50%;
+  position:absolute;
+}
+.score-ring-num{
+  position:relative;z-index:1;
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.8rem;
+  font-weight:600;
+}
+.score-grade{
+  font-family:'DM Mono',monospace;
+  font-size:11px;
+  color:var(--ink3);
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+}
+.score-headline{font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:300;margin-bottom:6px;}
+.score-sub{font-size:13px;color:var(--ink2);margin-bottom:20px;line-height:1.6;}
+.score-pills{display:flex;gap:10px;flex-wrap:wrap;}
+.pill{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:30px;font-size:12px;font-weight:500;}
+.pill.correct{background:var(--green2);color:var(--green);}
+.pill.wrong{background:var(--red2);color:var(--red);}
+.pill.time{background:var(--gold2);color:var(--gold);}
+.weakness-section{
+  background:var(--warn2);
+  border:1px solid #f0d0b8;
+  border-radius:12px;
+  padding:24px 28px;
+  margin-bottom:32px;
+}
+.weakness-title{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:600;margin-bottom:6px;color:var(--warn);}
+.weakness-sub{font-size:13px;color:#a0550a;margin-bottom:14px;line-height:1.6;}
+.weakness-tags{display:flex;gap:8px;flex-wrap:wrap;}
+.weakness-tag{background:#fff;border:1px solid #f0d0b8;color:var(--warn);font-size:12px;padding:5px 14px;border-radius:30px;}
+.results-actions{display:flex;gap:12px;margin-bottom:40px;flex-wrap:wrap;}
+.btn-outline{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:11px 24px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:var(--surface);
+  color:var(--ink);
+  font-family:'DM Sans',sans-serif;
+  font-size:13px;
+  cursor:pointer;
+  transition:all 0.15s;
+}
+.btn-outline:hover{border-color:var(--ink);background:var(--bg);}
+.review-divider{display:flex;align-items:center;gap:16px;margin-bottom:24px;}
+.review-divider span{
+  font-family:'DM Mono',monospace;
+  font-size:11px;
+  color:var(--ink3);
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  white-space:nowrap;
+}
+.divider-line{flex:1;height:1px;background:var(--border);}
+.review-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:12px;
+  margin-bottom:12px;
+  overflow:hidden;
+}
+.review-card.correct-card{border-left:3px solid var(--green);}
+.review-card.wrong-card{border-left:3px solid var(--red);}
+.review-header{display:flex;align-items:center;gap:14px;padding:20px 24px;cursor:pointer;user-select:none;}
+.review-status{
+  width:24px;height:24px;
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;flex-shrink:0;font-weight:600;
+}
+.correct-card .review-status{background:var(--green2);color:var(--green);}
+.wrong-card .review-status{background:var(--red2);color:var(--red);}
+.review-q{font-family:'Cormorant Garamond',serif;font-size:1.05rem;flex:1;line-height:1.4;}
+.review-toggle{font-size:18px;color:var(--ink3);transition:transform 0.25s;flex-shrink:0;}
+.review-card.open .review-toggle{transform:rotate(180deg);}
+.review-body{display:none;padding:0 24px 24px;border-top:1px solid var(--border);}
+.review-card.open .review-body{display:block;}
+.review-options{display:flex;flex-direction:column;gap:6px;margin:16px 0;}
+.review-option{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-radius:8px;font-size:13px;line-height:1.5;}
+.review-option.opt-correct{background:var(--green2);color:var(--green);}
+.review-option.opt-wrong-chosen{background:var(--red2);color:var(--red);}
+.review-option.opt-neutral{background:var(--bg);color:var(--ink2);}
+.review-option-icon{font-size:12px;margin-top:2px;flex-shrink:0;}
+.explanation-block{margin-top:4px;}
+.exp-label{
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  color:var(--ink3);
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  margin-bottom:10px;
+}
+.exp-option{
+  padding:10px 14px;
+  border-radius:8px;
+  font-size:13px;
+  line-height:1.6;
+  margin-bottom:6px;
+  border-left:2px solid;
+}
+.exp-option.exp-correct{border-color:var(--green);background:var(--green2);color:#1a4a30;}
+.exp-option.exp-wrong{border-color:#ddd;background:#f9f9f9;color:var(--ink2);}
+.exp-key{font-weight:600;margin-right:4px;}
+@media print{
+  body::after{display:none;}
+  .site-header,.submit-area,.btn-submit,.results-actions,.btn-outline{display:none!important;}
+  .quiz-form{display:none!important;}
+  .results-page{display:block!important;}
+  .review-body{display:block!important;}
+  .review-toggle{display:none;}
+}
+@media(max-width:600px){
+  .site-header{padding:0 20px;}
+  .container{padding:32px 16px 100px;}
+  .question-card{padding:22px 18px;}
+  .score-card{grid-template-columns:1fr;text-align:center;}
+  .score-pills{justify-content:center;}
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="logo">Dr.<span>X</span> Marathon Exams</div>
+  <div style="display:flex;align-items:center;gap:16px;">
+    <div class="header-meta">Respiratory Module</div>
+    <div class="timer-wrap" id="timerWrap">
+      <div class="timer-dot"></div>
+      <span id="timerDisplay">10:00</span>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <div class="quiz-form" id="quizForm">
+    <div class="quiz-meta">
+      <div class="quiz-title">Respiratory System — <em>Quick Assessment</em></div>
+      <div class="quiz-subtitle">5 questions · Answer all before submitting · Timer counts down from 10 minutes</div>
+    </div>
+    <div class="progress-section">
+      <div class="progress-top">
+        <div class="progress-label">Progress</div>
+        <div class="progress-count" id="progressCount">0 / 5 answered</div>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div class="question-card" id="card-0">
+      <div class="q-header">
+        <div class="q-num">Q 01</div>
+        <div class="q-text">Which of the following causes Bronchodilation (increased diameter)?</div>
+      </div>
+      <div class="options" data-q="0">
+        <div class="option" data-v="0"><div class="option-radio"></div><div class="option-label"><span class="option-key">A.</span> Parasympathetic stimulation (Acetylcholine)</div></div>
+        <div class="option" data-v="1"><div class="option-radio"></div><div class="option-label"><span class="option-key">B.</span> Sympathetic stimulation and Epinephrine (via β₂ receptors)</div></div>
+        <div class="option" data-v="2"><div class="option-radio"></div><div class="option-label"><span class="option-key">C.</span> Local factors like decreased CO₂ concentration</div></div>
+        <div class="option" data-v="3"><div class="option-radio"></div><div class="option-label"><span class="option-key">D.</span> Histamine release during allergic reactions</div></div>
+      </div>
+      <div class="warn-badge" id="warn-0">⚠ Please select an answer before submitting.</div>
+    </div>
+
+    <div class="question-card" id="card-1">
+      <div class="q-header">
+        <div class="q-num">Q 02</div>
+        <div class="q-text">The primary function of the "Conducting Zone" of the respiratory system is:</div>
+      </div>
+      <div class="options" data-q="1">
+        <div class="option" data-v="0"><div class="option-radio"></div><div class="option-label"><span class="option-key">A.</span> Gas exchange with blood</div></div>
+        <div class="option" data-v="1"><div class="option-radio"></div><div class="option-label"><span class="option-key">B.</span> Surfactant production</div></div>
+        <div class="option" data-v="2"><div class="option-radio"></div><div class="option-label"><span class="option-key">C.</span> Warming, filtering, and humidifying the air</div></div>
+        <div class="option" data-v="3"><div class="option-radio"></div><div class="option-label"><span class="option-key">D.</span> Regulation of acid-base balance</div></div>
+      </div>
+      <div class="warn-badge" id="warn-1">⚠ Please select an answer before submitting.</div>
+    </div>
+
+    <div class="question-card" id="card-2">
+      <div class="q-header">
+        <div class="q-num">Q 03</div>
+        <div class="q-text">Lung Compliance is defined as the change in lung volume per unit change in:</div>
+      </div>
+      <div class="options" data-q="2">
+        <div class="option" data-v="0"><div class="option-radio"></div><div class="option-label"><span class="option-key">A.</span> Intra-alveolar pressure</div></div>
+        <div class="option" data-v="1"><div class="option-radio"></div><div class="option-label"><span class="option-key">B.</span> Atmospheric pressure</div></div>
+        <div class="option" data-v="2"><div class="option-radio"></div><div class="option-label"><span class="option-key">C.</span> Transpulmonary pressure</div></div>
+        <div class="option" data-v="3"><div class="option-radio"></div><div class="option-label"><span class="option-key">D.</span> Tracheal pressure</div></div>
+      </div>
+      <div class="warn-badge" id="warn-2">⚠ Please select an answer before submitting.</div>
+    </div>
+
+    <div class="question-card" id="card-3">
+      <div class="q-header">
+        <div class="q-num">Q 04</div>
+        <div class="q-text">Positive Intrapleural Pressure (IPP) can occur physiologically during which of the following?</div>
+      </div>
+      <div class="options" data-q="3">
+        <div class="option" data-v="0"><div class="option-radio"></div><div class="option-label"><span class="option-key">A.</span> Quiet Inspiration</div></div>
+        <div class="option" data-v="1"><div class="option-radio"></div><div class="option-label"><span class="option-key">B.</span> Deep Expiration</div></div>
+        <div class="option" data-v="2"><div class="option-radio"></div><div class="option-label"><span class="option-key">C.</span> Valsalva Maneuver</div></div>
+        <div class="option" data-v="3"><div class="option-radio"></div><div class="option-label"><span class="option-key">D.</span> Quiet Expiration</div></div>
+      </div>
+      <div class="warn-badge" id="warn-3">⚠ Please select an answer before submitting.</div>
+    </div>
+
+    <div class="question-card" id="card-4">
+      <div class="q-header">
+        <div class="q-num">Q 05</div>
+        <div class="q-text">Which is the primary muscle of inspiration responsible for 75% of air entry during quiet breathing?</div>
+      </div>
+      <div class="options" data-q="4">
+        <div class="option" data-v="0"><div class="option-radio"></div><div class="option-label"><span class="option-key">A.</span> External intercostal muscles</div></div>
+        <div class="option" data-v="1"><div class="option-radio"></div><div class="option-label"><span class="option-key">B.</span> Sternocleidomastoid muscle</div></div>
+        <div class="option" data-v="2"><div class="option-radio"></div><div class="option-label"><span class="option-key">C.</span> Diaphragm</div></div>
+        <div class="option" data-v="3"><div class="option-radio"></div><div class="option-label"><span class="option-key">D.</span> Internal intercostal muscles</div></div>
+      </div>
+      <div class="warn-badge" id="warn-4">⚠ Please select an answer before submitting.</div>
+    </div>
+
+    <div class="submit-area">
+      <div class="answered-status"><strong id="answeredNum">0</strong> of 5 answered</div>
+      <button class="btn-submit" onclick="submitQuiz()">Submit Answers →</button>
+    </div>
+  </div>
+
+  <div class="results-page" id="resultsPage">
+    <div class="score-card" id="scoreCard">
+      <div class="score-ring-wrap">
+        <div class="score-ring" id="scoreRing">
+          <div class="score-ring-num" id="scoreNum">—</div>
+        </div>
+        <div class="score-grade" id="scoreGrade">—</div>
+      </div>
+      <div class="score-details">
+        <div class="score-headline" id="scoreHeadline">—</div>
+        <div class="score-sub" id="scoreSub">—</div>
+        <div class="score-pills">
+          <div class="pill correct">✓ <span id="pillCorrect">0</span> Correct</div>
+          <div class="pill wrong">✗ <span id="pillWrong">0</span> Wrong</div>
+          <div class="pill time">⏱ <span id="pillTime">—</span> Used</div>
+        </div>
+      </div>
+    </div>
+    <div class="weakness-section" id="weaknessSection" style="display:none;">
+      <div class="weakness-title">⚡ Areas to Strengthen</div>
+      <div class="weakness-sub" id="weaknessSub">Based on your wrong answers, focus your revision on these topics:</div>
+      <div class="weakness-tags" id="weaknessTags"></div>
+    </div>
+    <div class="results-actions">
+      <button class="btn-outline" onclick="window.print()">🖨 Print Results</button>
+      <button class="btn-outline" onclick="location.reload()">↺ Retake Quiz</button>
+    </div>
+    <div class="review-divider">
+      <div class="divider-line"></div>
+      <span>Detailed Review</span>
+      <div class="divider-line"></div>
+    </div>
+    <div id="reviewContainer"></div>
+  </div>
+</div>
+
+<script>
+const QUESTIONS = [
+  {
+    text: "Which of the following causes Bronchodilation (increased diameter)?",
+    options: ["Parasympathetic stimulation (Acetylcholine)", "Sympathetic stimulation and Epinephrine (via β₂ receptors)", "Local factors like decreased CO₂ concentration", "Histamine release during allergic reactions"],
+    correct: 1,
+    topic: "Bronchomotor Control",
+    explanations: [
+      "WRONG — Parasympathetic stimulation via acetylcholine activates muscarinic M3 receptors, causing bronchoconstriction, not bronchodilation. This is why anticholinergics like ipratropium are used in asthma.",
+      "CORRECT — Sympathetic stimulation and epinephrine activate β₂ adrenergic receptors on bronchial smooth muscle, causing relaxation and bronchodilation. This is the basis of β₂ agonists like salbutamol.",
+      "WRONG — Decreased CO₂ (hypocapnia) actually causes mild bronchoconstriction. It is increased CO₂ that causes bronchodilation as a local reflex.",
+      "WRONG — Histamine causes bronchoconstriction, not bronchodilation. It binds H1 receptors on airway smooth muscle, worsening airway narrowing."
+    ]
+  },
+  {
+    text: "The primary function of the Conducting Zone of the respiratory system is:",
+    options: ["Gas exchange with blood", "Surfactant production", "Warming, filtering, and humidifying the air", "Regulation of acid-base balance"],
+    correct: 2,
+    topic: "Respiratory Zones",
+    explanations: [
+      "WRONG — Gas exchange occurs exclusively in the Respiratory Zone (alveoli), not the conducting zone.",
+      "WRONG — Surfactant is produced by Type II pneumocytes in the alveoli, part of the respiratory zone.",
+      "CORRECT — The conducting zone conditions inspired air: warming it, humidifying it to 100% saturation, and filtering particles via mucus and cilia. It also constitutes anatomical dead space (~150 mL).",
+      "WRONG — Acid-base regulation via breathing is a function of the respiratory system overall, not specific to the conducting zone."
+    ]
+  },
+  {
+    text: "Lung Compliance is defined as the change in lung volume per unit change in:",
+    options: ["Intra-alveolar pressure", "Atmospheric pressure", "Transpulmonary pressure", "Tracheal pressure"],
+    correct: 2,
+    topic: "Lung Mechanics & Compliance",
+    explanations: [
+      "WRONG — Intra-alveolar pressure alone is not the denominator in compliance. Compliance measures volume change against the pressure gradient across the lung wall.",
+      "WRONG — Atmospheric pressure is the external reference point (0 cmH₂O), not the variable driving lung expansion.",
+      "CORRECT — Compliance = ΔVolume / ΔTranspulmonary Pressure. Transpulmonary pressure = Alveolar pressure − Intrapleural pressure. Normal compliance is ~200 mL/cmH₂O.",
+      "WRONG — Tracheal pressure is not used to define compliance. The correct measurement uses transpulmonary pressure."
+    ]
+  },
+  {
+    text: "Positive Intrapleural Pressure (IPP) can occur physiologically during which of the following?",
+    options: ["Quiet Inspiration", "Deep Expiration", "Valsalva Maneuver", "Quiet Expiration"],
+    correct: 2,
+    topic: "Intrapleural Pressure",
+    explanations: [
+      "WRONG — During quiet inspiration, intrapleural pressure becomes more negative (drops from −5 to −8 cmH₂O). This draws air into the lungs.",
+      "WRONG — During deep expiration, IPP remains negative, though less so. It does not become positive during passive expiration.",
+      "CORRECT — The Valsalva maneuver (forced expiration against a closed glottis) dramatically raises intrathoracic pressure, pushing IPP into positive values and reducing venous return.",
+      "WRONG — During quiet expiration, IPP is approximately −3 to −5 cmH₂O. It remains subatmospheric throughout normal quiet breathing."
+    ]
+  },
+  {
+    text: "Which is the primary muscle of inspiration responsible for 75% of air entry during quiet breathing?",
+    options: ["External intercostal muscles", "Sternocleidomastoid muscle", "Diaphragm", "Internal intercostal muscles"],
+    correct: 2,
+    topic: "Muscles of Respiration",
+    explanations: [
+      "WRONG — External intercostal muscles are accessory inspiratory muscles responsible for only ~25% of tidal volume, not the primary driver.",
+      "WRONG — The sternocleidomastoid is an accessory muscle only recruited during labored breathing or respiratory distress.",
+      "CORRECT — The diaphragm is the primary inspiratory muscle, responsible for ~75% of air entry. When it contracts, it flattens downward, increasing thoracic volume and drawing air in.",
+      "WRONG — Internal intercostal muscles are muscles of active expiration. They are not active during quiet breathing."
+    ]
+  }
+];
+
+let userAnswers = new Array(5).fill(null);
+let timerInterval;
+let secondsLeft = 600;
+let secondsUsed = 0;
+
+function startTimer() {
+  timerInterval = setInterval(() => {
+    secondsLeft--;
+    secondsUsed++;
+    const m = Math.floor(secondsLeft / 60);
+    const s = secondsLeft % 60;
+    document.getElementById('timerDisplay').textContent = `${m}:${String(s).padStart(2,'0')}`;
+    const wrap = document.getElementById('timerWrap');
+    if (secondsLeft <= 120) wrap.classList.add('urgent');
+    if (secondsLeft <= 0) { clearInterval(timerInterval); submitQuiz(); }
+  }, 1000);
+}
+startTimer();
+
+document.querySelectorAll('.options').forEach(group => {
+  group.querySelectorAll('.option').forEach(opt => {
+    opt.addEventListener('click', () => {
+      const q = parseInt(group.dataset.q);
+      group.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+      opt.classList.add('selected');
+      userAnswers[q] = parseInt(opt.dataset.v);
+      document.getElementById(`card-${q}`).classList.remove('unanswered-warn');
+      document.getElementById(`warn-${q}`).classList.remove('show');
+      updateProgress();
+    });
+  });
+});
+
+function updateProgress() {
+  const done = userAnswers.filter(a => a !== null).length;
+  document.getElementById('answeredNum').textContent = done;
+  document.getElementById('progressCount').textContent = `${done} / 5 answered`;
+  document.getElementById('progressFill').style.width = `${(done/5)*100}%`;
+}
+
+function submitQuiz() {
+  clearInterval(timerInterval);
+  let hasUnanswered = false;
+  userAnswers.forEach((a, i) => {
+    if (a === null) {
+      document.getElementById(`card-${i}`).classList.add('unanswered-warn');
+      document.getElementById(`warn-${i}`).classList.add('show');
+      hasUnanswered = true;
+    }
+  });
+  if (hasUnanswered) {
+    document.querySelector('.unanswered-warn')?.scrollIntoView({behavior:'smooth', block:'center'});
+    if (secondsLeft > 0) startTimer();
+    return;
+  }
+  buildResults();
+}
+
+function buildResults() {
+  document.getElementById('quizForm').style.display = 'none';
+  document.getElementById('resultsPage').style.display = 'block';
+  window.scrollTo({top:0, behavior:'smooth'});
+  let correct = 0;
+  userAnswers.forEach((a, i) => { if (a === QUESTIONS[i].correct) correct++; });
+  const wrong = 5 - correct;
+  const pct = Math.round((correct/5)*100);
+  const ring = document.getElementById('scoreRing');
+  ring.style.setProperty('--pct', `${pct}%`);
+  document.getElementById('scoreNum').textContent = `${correct}/5`;
+  let grade, headline, sub;
+  if (pct===100){grade='PERFECT';headline='Flawless Performance';sub='You answered every question correctly.';}
+  else if (pct>=80){grade='EXCELLENT';headline='Outstanding Result';sub='Strong performance. Review the questions you missed.';}
+  else if (pct>=60){grade='GOOD';headline='Solid Foundation';sub='You understand the core concepts. Targeted revision will help.';}
+  else if (pct>=40){grade='AVERAGE';headline='Room to Improve';sub='Some concepts need revisiting. Study the explanations carefully.';}
+  else {grade='NEEDS WORK';headline='Keep Studying';sub='Review the full topic from the beginning.';}
+  document.getElementById('scoreGrade').textContent = grade;
+  document.getElementById('scoreHeadline').textContent = headline;
+  document.getElementById('scoreSub').textContent = sub;
+  document.getElementById('pillCorrect').textContent = correct;
+  document.getElementById('pillWrong').textContent = wrong;
+  const usedM = Math.floor(secondsUsed/60);
+  const usedS = secondsUsed % 60;
+  document.getElementById('pillTime').textContent = `${usedM}m ${usedS}s`;
+  const weakTopics = [];
+  userAnswers.forEach((a, i) => { if (a !== QUESTIONS[i].correct) weakTopics.push(QUESTIONS[i].topic); });
+  if (weakTopics.length > 0) {
+    document.getElementById('weaknessSection').style.display = 'block';
+    const tags = document.getElementById('weaknessTags');
+    tags.innerHTML = '';
+    [...new Set(weakTopics)].forEach(t => {
+      const tag = document.createElement('div');
+      tag.className = 'weakness-tag';
+      tag.textContent = t;
+      tags.appendChild(tag);
+    });
+    document.getElementById('weaknessSub').textContent = `You got ${weakTopics.length} question${weakTopics.length>1?'s':''} wrong. Prioritise revising these topics:`;
+  }
+  const container = document.getElementById('reviewContainer');
+  container.innerHTML = '';
+  QUESTIONS.forEach((q, i) => {
+    const isCorrect = userAnswers[i] === q.correct;
+    const card = document.createElement('div');
+    card.className = `review-card ${isCorrect ? 'correct-card' : 'wrong-card'}`;
+    const optKeys = ['A','B','C','D'];
+    let optionsHTML = '';
+    q.options.forEach((opt, oi) => {
+      let cls = 'opt-neutral';
+      let icon = '○';
+      if (oi === q.correct) { cls = 'opt-correct'; icon = '✓'; }
+      else if (oi === userAnswers[i] && !isCorrect) { cls = 'opt-wrong-chosen'; icon = '✗'; }
+      optionsHTML += `<div class="review-option ${cls}"><span class="review-option-icon">${icon}</span>${optKeys[oi]}. ${opt}</div>`;
+    });
+    let expHTML = '';
+    q.explanations.forEach((exp, ei) => {
+      const isC = ei === q.correct;
+      expHTML += `<div class="exp-option ${isC ? 'exp-correct' : 'exp-wrong'}"><span class="exp-key">${optKeys[ei]}.</span>${exp}</div>`;
+    });
+    card.innerHTML = `
+      <div class="review-header" onclick="toggleReview(this)">
+        <div class="review-status">${isCorrect ? '✓' : '✗'}</div>
+        <div class="review-q">Q${i+1}. ${q.text}</div>
+        <div class="review-toggle">⌄</div>
+      </div>
+      <div class="review-body">
+        <div class="review-options">${optionsHTML}</div>
+        <div class="explanation-block">
+          <div class="exp-label">Explanation — all options</div>
+          ${expHTML}
+        </div>
+      </div>`;
+    container.appendChild(card);
+  });
+}
+
+function toggleReview(header) {
+  const card = header.parentElement;
+  card.classList.toggle('open');
+}
+</script>
+</body>
+</html>
